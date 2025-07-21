@@ -1,0 +1,7 @@
+[project]
+name = "resonant-soul"
+version = "0.1.0"
+description = "心灵伴侣-您的AI心理健康助手"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
