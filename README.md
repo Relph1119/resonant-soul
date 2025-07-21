@@ -24,23 +24,21 @@ activate
 ```
 
 ## 启动项目
-1. 在conf路径中，配置系统文件`config.ini`
+1. 在conf路径中，配置系统文件`service_conf.yaml`
 
-```text
-[LLM]
-base_url = https://ark.cn-beijing.volces.com/api/v3
-api_key = your_api_key
-model_id = deepseek-r1-250120
+```yaml
+llm:
+  model_type: 'Qwen/Qwen2.5-7B-Instruct'
+  model_url: 'https://api.siliconflow.cn/v1/'
+  api_key: 'your-api-key'
 ```
 
-2. 启动项目的前后端
+2. 启动项目
 
 ```shell
-python api/memchain_server.py
 python web/web_server.py
 ```
 
 3. 访问项目：
 
-系统 API 详情访问地址：http://127.0.0.1:8000/docs
-用户界面访问地址：http://127.0.0.1:7860
+用户界面访问地址：http://127.0.0.1:5760
