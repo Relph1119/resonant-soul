@@ -1,4 +1,4 @@
 llm:
   model_type: 'Qwen/Qwen2.5-7B-Instruct'
   model_url: 'https://api.siliconflow.cn/v1/'
-  api_key: 'your-api-key'
+  api_key: 'sk-hxplhhxfrfyxwvpltcksqohbxinsgvhyjeqvqnhyngkgztsh'

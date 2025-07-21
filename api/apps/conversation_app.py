@@ -21,6 +21,7 @@ def process_user_input(user_input, history:list):
     save_diary_entry(user_input, emotions)
     print(f"检测到的情绪: {emotions}")
 
+    # 创建角色会话
     task_prompt = "作为心灵伙伴AI心理健康助手，直接以第一人称与大学生进行心理健康对话"
     role_play_session = RolePlaying(
         assistant_role_name="心灵伙伴AI心理健康助手",
@@ -33,12 +34,14 @@ def process_user_input(user_input, history:list):
         output_language='中文'
     )
 
+    # 初始化提示词
     input_msg = role_play_session.init_chat()
     input_msg.content = f"""
     Instruction: 请以心灵伙伴AI心理健康助手的第一人称身份回应。根据检测到的情绪 {emotions}，提供针对性的支持和建议。
     Input: {user_input}
     """
 
+    # 调用打模型进行对话
     assistant_response, _ = role_play_session.step(input_msg)
     response_content = assistant_response.msg.content
 
@@ -59,6 +62,7 @@ def process_user_input(user_input, history:list):
     # 保存对话记录到数据库
     ConversationService.save_conversation(user_input, response_content)
 
+    # 返回新的对话历史和情绪图表
     new_history = history + [
         {"role": "user", "content": user_input},
         {"role": "assistant", "content": response_content}

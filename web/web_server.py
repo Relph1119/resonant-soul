@@ -178,4 +178,4 @@ def create_gradio_interface():
 
 if __name__ == "__main__":
     interface = create_gradio_interface()
-    interface.launch(server_port=5760, debug=True)
+    interface.launch(server_port=5760, server_name='0.0.0.0')
