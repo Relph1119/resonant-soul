@@ -11,6 +11,7 @@
 import gradio as gr
 
 from api.apps.conversation_app import process_user_input
+from api.apps.emotion_app import get_all_emotion_records
 from api.apps.sas_app import process_sas_scores
 from api.apps.statistics_app import generate_stats_charts, get_stats_text
 from api.settings import DIARY_ENTRIES
@@ -104,6 +105,7 @@ def create_gradio_interface():
             relaxation_guide = gr.Textbox(label="训练指导", value="请选择一种放松训练方式")
 
         def update_diary():
+            DIARY_ENTRIES = get_all_emotion_records()
             data = [[entry['date'], entry['content'], ', '.join(entry['emotions'])]
                     for entry in DIARY_ENTRIES]
             return data
