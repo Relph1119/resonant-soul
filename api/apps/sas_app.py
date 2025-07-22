@@ -30,13 +30,13 @@ def get_sas_result(score):
         return "重度焦虑"
 
 
-def process_sas_scores(*scores):
+def process_sas_scores(user_id, *scores):
     """处理SAS评估分数"""
     total_score = calculate_sas_score(scores)
     result = get_sas_result(total_score)
 
     # 保存评估结果到数据库
-    AssessmentService.save_assessment(list(scores), total_score, result)
+    AssessmentService.save_assessment(user_id, list(scores), total_score, result)
 
     detailed_result = f"""
 评估完成！

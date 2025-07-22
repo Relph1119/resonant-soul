@@ -17,11 +17,12 @@ class ConversationService:
     model = Conversation
 
     @classmethod
-    def save_conversation(cls, user_input, ai_response):
+    def save_conversation(cls, user_input, ai_response, user_id):
         """保存对话记录"""
         cls.model.create(
             user_input=user_input,
-            ai_response=ai_response
+            ai_response=ai_response,
+            user_id=user_id
         )
 
     @classmethod
@@ -35,14 +36,18 @@ class ConversationService:
                 for c in query]
 
     @classmethod
-    def get_conversation_stats(cls, days=7):
+    def get_conversation_stats(cls, days=7, user_id=None):
         """获取对话统计信息"""
+        if user_id:
+            query = cls.model.select().where(cls.model.user_id == user_id)
+        else:
+            query = cls.model.select()
 
         start_date = datetime.now() - timedelta(days=days)
 
         # 基础统计
         basic_stats = (
-            cls.model.select(
+            query.select(
                 fn.COUNT(cls.model.id).alias('total_count'),
                 fn.COUNT(fn.DISTINCT(fn.date(cls.model.timestamp))).alias('active_days')
             )
@@ -52,7 +57,7 @@ class ConversationService:
         # 每日对话次数统计
         daily_counts = dict(
             (row.date, row.count)
-            for row in cls.model.select(
+            for row in query.select(
                 fn.date(cls.model.timestamp).alias('date'),
                 fn.COUNT(cls.model.id).alias('count')
             )

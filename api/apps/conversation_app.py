@@ -9,16 +9,16 @@
 """
 from camel.societies import RolePlaying
 
-from api.apps.emotion_app import analyze_emotion, save_emotion_record, save_diary_entry, generate_emotion_chart
+from api.apps.emotion_app import analyze_emotion, save_emotion_record, generate_emotion_chart
 from api.db.services.conversation_service import ConversationService
 from api.settings import CHAT_MDL
 
 
-def process_user_input(user_input, history:list):
+def process_user_input(current_user, user_input, history: list):
+    user_id = current_user['id']
     """处理用户输入并返回响应"""
     emotions = analyze_emotion(user_input)
-    save_emotion_record(emotions, user_input)
-    save_diary_entry(user_input, emotions)
+    save_emotion_record(emotions, user_input, user_id)
     print(f"检测到的情绪: {emotions}")
 
     # 创建角色会话
@@ -60,7 +60,7 @@ def process_user_input(user_input, history:list):
         response_content = response_content.replace(phrase, "")
 
     # 保存对话记录到数据库
-    ConversationService.save_conversation(user_input, response_content)
+    ConversationService.save_conversation(user_input, response_content, user_id)
 
     # 返回新的对话历史和情绪图表
     new_history = history + [

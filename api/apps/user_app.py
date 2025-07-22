@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+@author: HuRuiFeng
+@file: user_app.py
+@time: 2025/7/22 17:12
+@project: resonant-soul
+@desc: 
+"""
+from api.db.services.user_service import UserService
+
+
+def user_register(username, name_nick, password):
+    try:
+        user = UserService.register(username, name_nick, password)
+        if user:
+            return {
+                "id": user.id,
+                "name": user.name_nick,
+                "username": user.username
+            }
+        return None
+    except Exception as e:
+        print(f"注册错误: {str(e)}")
+        return None
+
+
+def user_login(username, password):
+    # 修改登录逻辑
+    user = UserService.get_by_username(username)
+    if not user:
+        return {"error": "用户不存在"}
+    if not UserService.verify_password(user, password):
+        return {"error": "密码错误"}
+    return {
+        "id": user.id,
+        "name": user.name_nick
+    }
