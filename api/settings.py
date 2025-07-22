@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from api.db.db_models import DBManager
 from api.utils import get_base_config
+from api.utils.t_crypt import decrypt_api_key, generate_key
 
 EMOTION_RECORDS = []
 DIARY_ENTRIES = []
@@ -30,13 +31,15 @@ def init_settings():
     load_dotenv(dotenv_path='.env')
 
     LLM = get_base_config("llm")
+    api_key = LLM['api_key']
+    api_key = decrypt_api_key(api_key, generate_key())
 
     # 初始化模型
     CHAT_MDL = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI_COMPATIBLE_MODEL,
         model_type=LLM['model_type'],
         url=LLM['model_url'],
-        api_key=LLM['api_key']
+        api_key=api_key
     )
 
     from api.apps.emotion_app import get_all_emotion_records

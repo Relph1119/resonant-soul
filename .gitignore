@@ -295,3 +295,4 @@ cython_debug/
 
 /web/.gradio/
 /web/mindmate.db
+/mindmate.db
