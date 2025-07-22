@@ -1729,7 +1729,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "camel-ai", extras = ["al1"], specifier = ">=0.2.72" },
+    { name = "camel-ai", extras = ["al1"], specifier = "==0.2.72" },
     { name = "gradio", specifier = ">=5.38.0" },
     { name = "matplotlib", specifier = ">=3.10.3" },
     { name = "peewee", specifier = ">=3.18.2" },
