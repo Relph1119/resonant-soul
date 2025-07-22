@@ -13,10 +13,10 @@ from api.db.services.emotion_service import EmotionService
 import matplotlib.pyplot as plt
 
 
-def get_stats_text():
+def get_stats_text(user_id):
     """获取统计文本"""
-    assessment_stats = AssessmentService.get_assessment_stats()
-    conversation_stats = ConversationService.get_conversation_stats()
+    assessment_stats = AssessmentService.get_assessment_stats(user_id=user_id)
+    conversation_stats = ConversationService.get_conversation_stats(user_id=user_id)
 
     return f"""
 ### Overall Statistics
@@ -30,12 +30,12 @@ def get_stats_text():
     """
 
 
-def generate_stats_charts():
+def generate_stats_charts(user_id):
     """生成统计图表"""
     # 获取统计数据
-    emotion_stats = EmotionService.get_emotion_stats(days=7)
-    assessment_stats = AssessmentService.get_assessment_stats()
-    conversation_stats = ConversationService.get_conversation_stats(days=7)
+    emotion_stats = EmotionService.get_emotion_stats(days=7, user_id=user_id)
+    assessment_stats = AssessmentService.get_assessment_stats(user_id=user_id)
+    conversation_stats = ConversationService.get_conversation_stats(days=7, user_id=user_id)
 
     # 创建图表
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))

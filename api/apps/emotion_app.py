@@ -13,13 +13,13 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 from api.db.services.emotion_service import EmotionService
-from api.settings import DIARY_ENTRIES, EMOTION_RECORDS
+from api.settings import EMOTION_RECORDS
 
 
 def analyze_emotion(text):
     """分析用户情绪"""
     emotions = {
-        '焦虑': ['焦虑', '紧张', '不安', '担心', '压力'],
+        '焦虑': ['焦虑', '紧张', '不安', '担心', '压力', '烦恼'],
         '抑郁': ['抑郁', '难过', '消沉', '伤心', '悲伤', '失落'],
         '愤怒': ['生气', '愤怒', '烦躁', '恼火', '不满'],
         '积极': ['开心', '快乐', '高兴', '兴奋', '满足']
@@ -33,7 +33,7 @@ def analyze_emotion(text):
     return detected_emotions if detected_emotions else ['平静']
 
 
-def save_emotion_record(emotion, user_input):
+def save_emotion_record(emotion, user_input, user_id):
     """保存情绪记录"""
     record = {
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -42,17 +42,7 @@ def save_emotion_record(emotion, user_input):
     EMOTION_RECORDS.append(record)
     record['user_input'] = user_input
     # 添加数据库存储
-    EmotionService.save_emotion(emotion, user_input)
-
-
-def save_diary_entry(text, emotions):
-    """保存情绪日记"""
-    entry = {
-        'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'content': text,
-        'emotions': emotions
-    }
-    DIARY_ENTRIES.append(entry)
+    EmotionService.save_emotion(emotion, user_input, user_id)
 
 
 def generate_emotion_chart():
@@ -99,13 +89,13 @@ def generate_emotion_chart():
     return fig
 
 
-def get_all_emotion_records():
+def get_all_emotion_records(user_id):
     """
     获取所有的情绪记录，并按照 date, content, emotions 的数组返回，数组里存放着每一个字典。
     """
     records = []
     # 获取所有情绪记录
-    emotions = EmotionService.get_recent_all_emotions()
+    emotions = EmotionService.get_recent_all_emotions(user_id)
     for timestamp, emotion_json, user_input in emotions:
         emotions_list = json.loads(emotion_json)
         record = {

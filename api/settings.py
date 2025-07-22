@@ -17,13 +17,12 @@ from api.utils import get_base_config
 from api.utils.t_crypt import decrypt_api_key, generate_key
 
 EMOTION_RECORDS = []
-DIARY_ENTRIES = []
 databaseConn = None
 CHAT_MDL = None
 
 
 def init_settings():
-    global EMOTION_RECORDS, DIARY_ENTRIES, databaseConn, CHAT_MDL
+    global EMOTION_RECORDS, databaseConn, CHAT_MDL
     # 存储情绪记录和日记
     databaseConn = DBManager()
 
@@ -41,7 +40,3 @@ def init_settings():
         url=LLM['model_url'],
         api_key=api_key
     )
-
-    from api.apps.emotion_app import get_all_emotion_records
-    # 加载情绪记录
-    DIARY_ENTRIES = get_all_emotion_records()

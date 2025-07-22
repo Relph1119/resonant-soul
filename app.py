@@ -130,8 +130,9 @@ def create_gradio_interface():
                 )
                 relaxation_guide = gr.Textbox(label="训练指导", value="请选择一种放松训练方式")
 
-            def update_diary():
-                DIARY_ENTRIES = get_all_emotion_records()
+            def update_diary(current_user):
+                user_id = current_user['id']
+                DIARY_ENTRIES = get_all_emotion_records(user_id)
                 data = [[entry['date'], entry['content'], ', '.join(entry['emotions'])]
                         for entry in DIARY_ENTRIES]
                 return data
@@ -144,9 +145,13 @@ def create_gradio_interface():
                 )
                 # 添加刷新按钮
                 refresh_diary_btn = gr.Button("刷新日记")
-                refresh_diary_btn.click(update_diary, outputs=diary_list)
+                refresh_diary_btn.click(update_diary,
+                                        inputs=current_user,
+                                        outputs=diary_list)
                 # 在界面加载时更新日记数据
-                _interface.load(update_diary, outputs=diary_list)
+                _interface.load(update_diary,
+                                inputs=current_user,
+                                outputs=diary_list)
 
             # 添加统计分析标签页
             with gr.Tab("统计分析"):
@@ -158,17 +163,18 @@ def create_gradio_interface():
                 stats_text = gr.Markdown()
 
                 def update_stats(current_user):
-                    return generate_stats_charts(current_user), get_stats_text(current_user)
+                    user_id = current_user['id']
+                    return generate_stats_charts(user_id), get_stats_text(user_id)
 
                 refresh_btn.click(
                     update_stats,
                     inputs=current_user,
                     outputs=[stats_plot, stats_text]
                 )
-
+                user_id = current_user.value['id']
                 # 初始加载统计数据
-                stats_plot.value = generate_stats_charts(current_user)
-                stats_text.value = get_stats_text(current_user)
+                stats_plot.value = generate_stats_charts(user_id)
+                stats_text.value = get_stats_text(user_id)
 
         # 事件处理
         def login(username, password):
@@ -232,7 +238,7 @@ def create_gradio_interface():
 
         submit.click(
             fn=process_user_input,
-            inputs=[current_user,input_text, chatbot],
+            inputs=[current_user, input_text, chatbot],
             outputs=[chatbot, emotion_chart],
             queue=False
         ).then(
@@ -242,7 +248,7 @@ def create_gradio_interface():
             queue=False
         ).then(
             fn=update_diary,
-            inputs=None,
+            inputs=current_user,
             outputs=diary_list
         )
 

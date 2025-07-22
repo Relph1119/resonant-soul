@@ -18,19 +18,21 @@ class AssessmentService:
     model = Assessment
 
     @classmethod
-    def save_assessment(cls, scores, total_score, result):
+    def save_assessment(cls, user_id, scores, total_score, result):
         """保存评估记录"""
         cls.model.create(
+            user_id=user_id,
             scores=json.dumps(scores),
             total_score=total_score,
             result=result
         )
 
     @classmethod
-    def get_assessment_history(cls):
+    def get_assessment_history(cls, user_id):
         """获取评估历史"""
         query = (cls.model
                  .select()
+                 .where(cls.model.user_id == user_id)
                  .order_by(cls.model.timestamp.desc()))
 
         return [
@@ -44,9 +46,8 @@ class AssessmentService:
         ]
 
     @classmethod
-    def get_assessment_stats(cls):
+    def get_assessment_stats(cls, user_id):
         """获取评估结果统计"""
-
         # 获取基本统计数据
         basic_stats = (
             cls.model
@@ -55,7 +56,9 @@ class AssessmentService:
                 fn.AVG(cls.model.total_score).alias('avg_score'),
                 fn.MIN(cls.model.total_score).alias('min_score'),
                 fn.MAX(cls.model.total_score).alias('max_score')
-            ).first()
+            )
+            .where(cls.model.user_id == user_id)
+            .first()
         )
         # 获取结果分布
         result_distribution = dict(

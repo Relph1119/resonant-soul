@@ -14,6 +14,7 @@ from api.apps.conversation_app import process_user_input
 from api.apps.emotion_app import get_all_emotion_records
 from api.apps.sas_app import process_sas_scores
 from api.apps.statistics_app import generate_stats_charts, get_stats_text
+from api.apps.user_app import user_login, user_register
 
 # SAS焦虑自评量表题目
 sas_questions = [
@@ -49,100 +50,180 @@ relaxation_guides = {
     """
 }
 
+is_logged_in = False
+
 
 def create_gradio_interface():
     with gr.Blocks(title="心灵伙伴 - AI心理健康助手", theme=gr.themes.Soft()) as _interface:
-        with gr.Tab("主对话"):
+        current_user = gr.State({"id": None, "name": None})
+
+        # 用户认证面板
+        with gr.Column(visible=True) as auth_panel:
             gr.Markdown("# 🌟 心灵伙伴 - 您的AI心理健康助手")
-            with gr.Row():
-                with gr.Column(scale=3):
-                    chatbot = gr.Chatbot(height=400, type='messages')
-                    input_text = gr.Textbox(label="在这里输入您想说的话...", placeholder="请告诉我您的想法或感受...")
-                    submit = gr.Button("发送")
-                with gr.Column(scale=1):
-                    emotion_chart = gr.Plot(label="Emotion Trend")
+            with gr.Tabs():
+                with gr.Tab("登录", id="login"):
+                    login_username = gr.Textbox(label="用户名")
+                    login_password = gr.Textbox(label="密码", type="password")
+                    login_btn = gr.Button("登录")
+                    login_status = gr.Textbox(interactive=False)
 
-        with gr.Tab("心理评估"):
-            gr.Markdown("## 焦虑自评量表(SAS)")
-            gr.Markdown("""
-            ### 评分说明：
-            1 = 很少或没有
-            2 = 有时
-            3 = 经常
-            4 = 总是如此
+                with gr.Tab("注册", id="register"):
+                    register_username = gr.Textbox(label="用户名")
+                    register_password = gr.Textbox(label="密码", type="password")
+                    register_name_nick = gr.Textbox(label="昵称")
+                    register_btn = gr.Button("注册")
+                    register_status = gr.Textbox(label="注册状态", interactive=False)
 
-            请根据最近一周的感受进行评分。
-            """)
+        with gr.Column(visible=False, elem_id="main_panel") as main_panel:
+            # 修改Markdown为动态显示
+            current_user_display = gr.Markdown("### 当前用户：未登录")
+            # 主对话选项卡
+            with gr.Tab("主对话"):
+                gr.Markdown("# 🌟 心灵伙伴 - 您的AI心理健康助手")
+                with gr.Row():
+                    with gr.Column(scale=3):
+                        chatbot = gr.Chatbot(height=400, type='messages')
+                        input_text = gr.Textbox(label="在这里输入您想说的话...",
+                                                placeholder="请告诉我您的想法或感受...")
+                        submit = gr.Button("发送")
+                    with gr.Column(scale=1):
+                        emotion_chart = gr.Plot(label="Emotion Trend")
 
-            sas_scores = []
-            with gr.Column():
-                for i, q in enumerate(sas_questions, 1):
-                    sas_scores.append(
-                        gr.Slider(
-                            minimum=1,
-                            maximum=4,
-                            step=1,
-                            value=1,
-                            label=f"{i}. {q}",
-                            interactive=True
+            with gr.Tab("心理评估"):
+                gr.Markdown("## 焦虑自评量表(SAS)")
+                gr.Markdown("""
+                ### 评分说明：
+                1 = 很少或没有
+                2 = 有时
+                3 = 经常
+                4 = 总是如此
+
+                请根据最近一周的感受进行评分。
+                """)
+
+                sas_scores = []
+                with gr.Column():
+                    for i, q in enumerate(sas_questions, 1):
+                        sas_scores.append(
+                            gr.Slider(
+                                minimum=1,
+                                maximum=4,
+                                step=1,
+                                value=1,
+                                label=f"{i}. {q}",
+                                interactive=True
+                            )
                         )
+                    sas_submit = gr.Button("提交评估", variant="primary")
+                    sas_result = gr.Textbox(label="评估结果", interactive=False)
+
+                    sas_submit.click(
+                        process_sas_scores,
+                        inputs=[current_user, *sas_scores],
+                        outputs=sas_result
                     )
-                sas_submit = gr.Button("提交评估", variant="primary")
-                sas_result = gr.Textbox(label="评估结果", interactive=False)
 
-                sas_submit.click(
-                    process_sas_scores,
-                    inputs=sas_scores,
-                    outputs=sas_result
+            with gr.Tab("放松训练"):
+                relaxation_type = gr.Radio(
+                    choices=list(relaxation_guides.keys()),
+                    label="选择放松训练类型"
                 )
+                relaxation_guide = gr.Textbox(label="训练指导", value="请选择一种放松训练方式")
 
-        with gr.Tab("放松训练"):
-            relaxation_type = gr.Radio(
-                choices=list(relaxation_guides.keys()),
-                label="选择放松训练类型"
-            )
-            relaxation_guide = gr.Textbox(label="训练指导", value="请选择一种放松训练方式")
+            def update_diary(current_user):
+                user_id = current_user['id']
+                DIARY_ENTRIES = get_all_emotion_records(user_id)
+                data = [[entry['date'], entry['content'], ', '.join(entry['emotions'])]
+                        for entry in DIARY_ENTRIES]
+                return data
 
-        def update_diary():
-            DIARY_ENTRIES = get_all_emotion_records()
-            data = [[entry['date'], entry['content'], ', '.join(entry['emotions'])]
-                    for entry in DIARY_ENTRIES]
-            return data
+            with gr.Tab("情绪日记"):
+                gr.Markdown("## 我的情绪日记")
+                diary_list = gr.Dataframe(
+                    headers=["日期", "内容", "情绪"],
+                    label="日记记录"
+                )
+                # 添加刷新按钮
+                refresh_diary_btn = gr.Button("刷新日记")
+                refresh_diary_btn.click(update_diary,
+                                        inputs=current_user,
+                                        outputs=diary_list)
+                # 在界面加载时更新日记数据
+                _interface.load(update_diary,
+                                inputs=current_user,
+                                outputs=diary_list)
 
-        with gr.Tab("情绪日记"):
-            gr.Markdown("## 我的情绪日记")
-            diary_list = gr.Dataframe(
-                headers=["日期", "内容", "情绪"],
-                label="日记记录"
-            )
-            # 添加刷新按钮
-            refresh_diary_btn = gr.Button("刷新日记")
-            refresh_diary_btn.click(update_diary, outputs=diary_list)
-            # 在界面加载时更新日记数据
-            _interface.load(update_diary, outputs=diary_list)
+            # 添加统计分析标签页
+            with gr.Tab("统计分析"):
+                gr.Markdown("## 使用统计")
+                stats_plot = gr.Plot()
+                refresh_btn = gr.Button("刷新统计数据")
 
-        # 添加统计分析标签页
-        with gr.Tab("统计分析"):
-            gr.Markdown("## 使用统计")
-            stats_plot = gr.Plot()
-            refresh_btn = gr.Button("刷新统计数据")
+                # 统计信息文本显示
+                stats_text = gr.Markdown()
 
-            # 统计信息文本显示
-            stats_text = gr.Markdown()
+                def update_stats(current_user):
+                    user_id = current_user['id']
+                    return generate_stats_charts(user_id), get_stats_text(user_id)
 
-            def update_stats():
-                return generate_stats_charts(), get_stats_text()
-
-            refresh_btn.click(
-                update_stats,
-                outputs=[stats_plot, stats_text]
-            )
-
-            # 初始加载统计数据
-            stats_plot.value = generate_stats_charts()
-            stats_text.value = get_stats_text()
+                refresh_btn.click(
+                    update_stats,
+                    inputs=current_user,
+                    outputs=[stats_plot, stats_text]
+                )
+                user_id = current_user.value['id']
+                # 初始加载统计数据
+                stats_plot.value = generate_stats_charts(user_id)
+                stats_text.value = get_stats_text(user_id)
 
         # 事件处理
+        def login(username, password):
+            user_data = user_login(username, password)
+            if not user_data:
+                return "用户名或密码错误", None
+            if user_data.get("error") == "用户不存在":
+                return "用户不存在，请先注册", None
+            return "登录成功", user_data
+
+        login_btn.click(
+            login,
+            inputs=[login_username, login_password],
+            outputs=[login_status, current_user]
+        ).success(
+            # 根据登录结果决定面板显示状态
+            lambda status, user: (gr.Column(visible=user is None), gr.Column(visible=user is not None)),
+            inputs=[login_status, current_user],
+            outputs=[auth_panel, main_panel]
+        ).success(
+            # 更新用户显示时添加空值检查
+            fn=lambda user: gr.Markdown(f"### 当前用户：{user['name']}" if user else "### 当前用户：未登录"),
+            inputs=[current_user],
+            outputs=current_user_display
+        )
+
+        # 注册功能事件绑定
+        def register(username, name_nick, password):
+            result = user_register(username, name_nick, password)
+            if result and 'id' in result:
+                return "注册成功", result
+            return "注册失败，用户名已存在", None
+
+        register_btn.click(
+            register,
+            inputs=[register_username, register_name_nick, register_password],
+            outputs=[register_status, current_user]
+        ).success(
+            # 根据注册结果动态显示面板
+            lambda status, user: (gr.Column(visible=user is None), gr.Column(visible=user is not None)),
+            inputs=[register_status, current_user],
+            outputs=[auth_panel, main_panel]
+        ).success(
+            # 添加空值检查
+            fn=lambda user: gr.Markdown(f"### 当前用户：{user['name']}" if user else "### 当前用户：未登录"),
+            inputs=[current_user],
+            outputs=current_user_display
+        )
+
         def update_relaxation_guide(choice):
             return relaxation_guides[choice]
 
@@ -157,7 +238,7 @@ def create_gradio_interface():
 
         submit.click(
             fn=process_user_input,
-            inputs=[input_text, chatbot],
+            inputs=[current_user, input_text, chatbot],
             outputs=[chatbot, emotion_chart],
             queue=False
         ).then(
@@ -167,7 +248,7 @@ def create_gradio_interface():
             queue=False
         ).then(
             fn=update_diary,
-            inputs=None,
+            inputs=current_user,
             outputs=diary_list
         )
 
