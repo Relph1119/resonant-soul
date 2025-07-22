@@ -1,0 +1,20 @@
+[project]
+name = "resonant-soul"
+version = "0.1.0"
+description = "心灵伴侣-您的AI心理健康助手"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "camel-ai[al1]>=0.2.72",
+    "gradio>=5.38.0",
+    "matplotlib>=3.10.3",
+    "peewee>=3.18.2",
+    "pip>=25.1.1",
+    "pytest>=8.4.1",
+    "ruamel-yaml>=0.18.14",
+    "setuptools>=80.9.0",
+    "wheel>=0.45.1",
+]
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple"
