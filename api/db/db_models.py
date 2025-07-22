@@ -8,8 +8,9 @@
 @desc: 
 """
 from datetime import datetime
+import os
 
-from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField
+from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField
 from peewee import Model
 from peewee import SqliteDatabase
 
@@ -27,6 +28,10 @@ class User(BaseModel):
     username = TextField(unique=True)  # 用户名，唯一
     name_nick = TextField()  # 昵称
     password = TextField()  # 密码
+    status = TextField(default='正常')  # 用户状态
+    is_admin = BooleanField(default=False)  # 是否是管理员
+    created_at = DateTimeField(default=datetime.now)  # 创建时间
+    updated_at = DateTimeField(default=datetime.now)  # 更新时间
 
     class Meta:
         table_name = 'users'
@@ -59,16 +64,38 @@ class Assessment(BaseModel):
 
 class DBManager:
     def __init__(self, db_path='mindmate.db'):
+        # 如果数据库文件存在，先删除它
+        if os.path.exists(db_path):
+            try:
+                os.remove(db_path)
+                print(f"已删除旧的数据库文件: {db_path}")
+            except Exception as e:
+                print(f"删除数据库文件失败: {str(e)}")
+
         # 初始化数据库连接
         self.db = SqliteDatabase(db_path)
         db_proxy.initialize(self.db)
         # 需要确保所有模型类都继承自BaseModel
-        self.models = [Emotion, Conversation, Assessment, User]
+        self.models = [User, Emotion, Conversation, Assessment]  # 调整顺序，确保User先创建
 
         # 自动创建表
         with self.db:
             self._create_tables()
+            print("数据库表创建成功")
 
     def _create_tables(self):
         """创建数据库表"""
         self.db.create_tables(self.models, safe=True)
+
+
+# 创建数据库实例
+db_manager = DBManager()
+
+if __name__ == "__main__":
+    # 测试数据库连接
+    try:
+        db_manager.db.connect()
+        print("数据库连接成功")
+        db_manager.db.close()
+    except Exception as e:
+        print(f"数据库连接失败: {str(e)}")
