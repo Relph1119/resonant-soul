@@ -1,4 +1,4 @@
 llm:
   model_type: 'Qwen/Qwen2.5-7B-Instruct'
-  model_url: 'https://api.siliconflow.cn/v1/'
-  api_key: '+z9sTV6MCKcF6zOm3bO4+Y54zhe1YpdXnEqMVJSmhre/SaWilAgNFXXH/XgqQtz9R75Rc2NrL9+TC3bmvoB2xLVum/I3FMW+VQAlKun3HZQ='
+  model_url: 'https://api-inference.modelscope.cn/v1/'
+  api_key: 'aREmUIfbc5KtaCOI8RMkizn0s6XKXD4w9reTYGWetFsvUyg2I013lKXO0PsLCDoArSxlCM99VEU9zd1mpHLVFg=='

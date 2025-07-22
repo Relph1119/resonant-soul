@@ -14,7 +14,6 @@ from api.apps.conversation_app import process_user_input
 from api.apps.emotion_app import get_all_emotion_records
 from api.apps.sas_app import process_sas_scores
 from api.apps.statistics_app import generate_stats_charts, get_stats_text
-from api.settings import DIARY_ENTRIES
 
 # SAS焦虑自评量表题目
 sas_questions = [
