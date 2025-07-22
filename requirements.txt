@@ -184,7 +184,7 @@ python-multipart==0.0.20
     #   mcp
 pytz==2025.2
     # via pandas
-pywin32==311
+#pywin32==311
     # via mcp
 pyyaml==6.0.2
     # via
