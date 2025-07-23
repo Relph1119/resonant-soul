@@ -252,8 +252,6 @@ def create_gradio_interface():
                     outputs=[operation_status, users_table]
                 )
 
-                # 移除 admin_tab.load，改为在登录成功后刷新用户列表
-                
         # 事件处理
         def login(username, password):
             user_data = user_login(username, password)

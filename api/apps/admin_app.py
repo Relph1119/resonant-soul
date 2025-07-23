@@ -9,6 +9,7 @@
 """
 from api.db.services.user_service import UserService
 
+
 def get_all_users():
     """获取所有用户列表"""
     try:
@@ -28,6 +29,7 @@ def get_all_users():
         print(f"获取用户列表失败: {str(e)}")
         return []
 
+
 def update_user_status(user_id, status):
     """更新用户状态"""
     try:
@@ -36,6 +38,7 @@ def update_user_status(user_id, status):
         print(f"更新用户状态失败: {str(e)}")
         return False
 
+
 def delete_user(user_id):
     """删除用户"""
     try:
@@ -43,6 +46,7 @@ def delete_user(user_id):
     except Exception as e:
         print(f"删除用户失败: {str(e)}")
         return False
+
 
 def create_admin_user(username, name_nick, password):
     """创建管理员账号"""
@@ -55,5 +59,6 @@ def create_admin_user(username, name_nick, password):
         print(f"创建管理员账号失败: {str(e)}")
         return False, f"创建失败: {str(e)}"
 
+
 # 初始化管理员账号
-create_admin_user("admin", "系统管理员", "admin123") 
+create_admin_user("admin", "系统管理员", "admin123")

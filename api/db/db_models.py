@@ -8,7 +8,6 @@
 @desc: 
 """
 from datetime import datetime
-import os
 
 from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField
 from peewee import Model
@@ -64,14 +63,6 @@ class Assessment(BaseModel):
 
 class DBManager:
     def __init__(self, db_path='mindmate.db'):
-        # 如果数据库文件存在，先删除它
-        if os.path.exists(db_path):
-            try:
-                os.remove(db_path)
-                print(f"已删除旧的数据库文件: {db_path}")
-            except Exception as e:
-                print(f"删除数据库文件失败: {str(e)}")
-
         # 初始化数据库连接
         self.db = SqliteDatabase(db_path)
         db_proxy.initialize(self.db)
@@ -90,12 +81,3 @@ class DBManager:
 
 # 创建数据库实例
 db_manager = DBManager()
-
-if __name__ == "__main__":
-    # 测试数据库连接
-    try:
-        db_manager.db.connect()
-        print("数据库连接成功")
-        db_manager.db.close()
-    except Exception as e:
-        print(f"数据库连接失败: {str(e)}")
