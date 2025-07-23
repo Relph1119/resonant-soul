@@ -55,7 +55,7 @@ is_logged_in = False
 
 
 def create_gradio_interface():
-    with (gr.Blocks(title="心灵伙伴 - AI心理健康助手", theme=gr.themes.Soft()) as _interface):
+    with gr.Blocks(title="心灵伙伴 - AI心理健康助手", theme=gr.themes.Soft()) as _interface:
         current_user = gr.State({"id": None, "name": None, "is_admin": False})
 
         # 用户认证面板
@@ -66,7 +66,7 @@ def create_gradio_interface():
                     login_username = gr.Textbox(label="用户名")
                     login_password = gr.Textbox(label="密码", type="password")
                     login_btn = gr.Button("登录")
-                    login_status = gr.Textbox(interactive=False)
+                    login_status = gr.Textbox(label="登录状态", interactive=False)
 
                 with gr.Tab("注册", id="register"):
                     register_username = gr.Textbox(label="用户名")
@@ -85,8 +85,9 @@ def create_gradio_interface():
                     with gr.Column(scale=3):
                         chatbot = gr.Chatbot(height=400, type='messages')
                         input_text = gr.Textbox(label="在这里输入您想说的话...",
-                                                placeholder="请告诉我您的想法或感受...")
-                        submit = gr.Button("发送")
+                                                placeholder="请告诉我您的想法或感受...",
+                                                submit_btn=True,
+                                                stop_btn=True)
                     with gr.Column(scale=1):
                         emotion_chart = gr.Plot(label="Emotion Trend")
 
@@ -318,7 +319,7 @@ def create_gradio_interface():
             user = get_user_info_by_username(username)
             return "登录成功", user
 
-        login_btn.click(
+        login_event = lambda method: method(
             login,
             inputs=[login_username, login_password],
             outputs=[login_status, current_user]
@@ -345,11 +346,19 @@ def create_gradio_interface():
             inputs=current_user,
             outputs=[user_info, nick_info, reg_date_info]
         ).success(
+            fn=update_diary,
+            inputs=current_user,
+            outputs=diary_list
+        ).success(
             # 如果是管理员，刷新用户列表
             fn=lambda user: update_users_list() if user and user.get('is_admin') else None,
             inputs=[current_user],
             outputs=users_table
         )
+
+        # 应用统一处理到两个登录入口
+        login_event(login_btn.click)
+        login_event(login_password.submit)
 
         # 注册功能事件绑定
         def register(username, name_nick, password):
@@ -386,7 +395,7 @@ def create_gradio_interface():
         def set_welcome_message():
             return [{"role": "assistant", "content": welcome_message}]
 
-        submit.click(
+        input_text.submit(
             fn=process_user_input,
             inputs=[current_user, input_text, chatbot],
             outputs=[chatbot, emotion_chart],
