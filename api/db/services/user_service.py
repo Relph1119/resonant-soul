@@ -7,9 +7,10 @@
 @project: resonant-soul
 @desc: 用户服务
 """
-from datetime import datetime
-from api.db.db_models import User
 import hashlib
+from datetime import datetime
+
+from api.db.db_models import User
 
 
 class UserService:
@@ -87,3 +88,19 @@ class UserService:
             return True
         except User.DoesNotExist:
             return False
+
+    @classmethod
+    def update_password(cls, user_id, new_password):
+        user = User.get_by_id(user_id)
+        password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        user.password = password_hash
+        user.updated_at = datetime.now()
+        user.save()
+        return True
+
+    @classmethod
+    def get_by_id(cls, user_id):
+        try:
+            return User.get_by_id(user_id)
+        except User.DoesNotExist:
+            return None

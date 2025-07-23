@@ -15,8 +15,7 @@ from api.apps.conversation_app import process_user_input
 from api.apps.emotion_app import get_all_emotion_records
 from api.apps.sas_app import process_sas_scores
 from api.apps.statistics_app import generate_stats_charts, get_stats_text
-from api.apps.user_app import user_login, user_register
-from api.db.services.user_service import UserService
+from api.apps.user_app import user_login, user_register, get_user_info_by_username, update_password, get_user_info_by_id
 
 # SAS焦虑自评量表题目
 sas_questions = [
@@ -56,7 +55,7 @@ is_logged_in = False
 
 
 def create_gradio_interface():
-    with gr.Blocks(title="心灵伙伴 - AI心理健康助手", theme=gr.themes.Soft()) as _interface:
+    with (gr.Blocks(title="心灵伙伴 - AI心理健康助手", theme=gr.themes.Soft()) as _interface):
         current_user = gr.State({"id": None, "name": None, "is_admin": False})
 
         # 用户认证面板
@@ -178,6 +177,55 @@ def create_gradio_interface():
                 stats_plot.value = generate_stats_charts(user_id)
                 stats_text.value = get_stats_text(user_id)
 
+            with gr.Tab("用户信息"):
+                gr.Markdown("## 个人信息管理")
+
+                # 用户信息展示
+                with gr.Column():
+                    user_info = gr.Textbox(label="用户名", interactive=False)
+                    nick_info = gr.Textbox(label="用户昵称", interactive=False)
+                    reg_date_info = gr.Textbox(label="注册时间", interactive=False)
+
+                # 密码修改模块
+                with gr.Column():
+                    with gr.Row():
+                        new_password = gr.Textbox(label="新密码", type="password")
+                        confirm_password = gr.Textbox(label="确认新密码", type="password")
+                    update_pwd_btn = gr.Button("修改密码", variant="primary")
+                    pwd_status = gr.Textbox(label="操作结果", interactive=False)
+
+                # 信息更新函数
+                def update_user_info(current_user):
+                    if current_user is not None:
+                        user = get_user_info_by_id(current_user['id'])
+                        if user:
+                            return [
+                                user['username'],
+                                user['name'],
+                                user['created_at']
+                            ]
+                    return ["", "", ""]
+
+                # 密码修改处理
+                def change_password(current_user, new_pwd, confirm_pwd):
+                    if new_pwd != confirm_pwd:
+                        return "新密码与确认密码不一致"
+                    if len(new_pwd) < 8:
+                        return "密码长度至少8位"
+
+                    try:
+                        update_password(current_user['id'], new_pwd)
+                        return "密码修改成功"
+                    except Exception as e:
+                        return f"密码修改失败：{str(e)}"
+
+                # 绑定事件
+                update_pwd_btn.click(
+                    change_password,
+                    inputs=[current_user, new_password, confirm_password],
+                    outputs=pwd_status
+                )
+
             # 添加管理员标签页
             with gr.Tab("管理员功能", visible=False) as admin_tab:
                 gr.Markdown("## 用户管理")
@@ -267,13 +315,8 @@ def create_gradio_interface():
                 return user_data["error"], None
 
             # 获取完整的用户信息
-            user = UserService.get_by_username(username)
-            return "登录成功", {
-                "id": user.id,
-                "name": user.name_nick,
-                "username": user.username,
-                "is_admin": user.is_admin
-            }
+            user = get_user_info_by_username(username)
+            return "登录成功", user
 
         login_btn.click(
             login,
@@ -296,6 +339,11 @@ def create_gradio_interface():
             ),
             inputs=[current_user],
             outputs=current_user_display
+        ).success(
+            # 更新用户信息
+            fn=update_user_info,
+            inputs=current_user,
+            outputs=[user_info, nick_info, reg_date_info]
         ).success(
             # 如果是管理员，刷新用户列表
             fn=lambda user: update_users_list() if user and user.get('is_admin') else None,
