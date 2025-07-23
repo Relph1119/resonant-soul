@@ -37,6 +37,7 @@ colorama==0.4.6
     # via
     #   camel-ai
     #   click
+    #   loguru
     #   pytest
     #   tqdm
 contourpy==1.3.2
@@ -110,6 +111,8 @@ jsonschema-specifications==2025.4.1
     # via jsonschema
 kiwisolver==1.4.8
     # via matplotlib
+loguru==0.7.3
+    # via resonant-soul (pyproject.toml)
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
@@ -284,3 +287,5 @@ websockets==15.0.1
     # via gradio-client
 wheel==0.45.1
     # via resonant-soul (pyproject.toml)
+win32-setctime==1.2.0
+    # via loguru

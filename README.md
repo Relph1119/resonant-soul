@@ -78,3 +78,26 @@ python app.py
 3. 访问项目：
 
 用户界面访问地址：http://127.0.0.1:5760
+
+## 项目部署
+
+1. 依赖文件生成（新添加依赖包需要重新生成）
+
+由于魔搭创空间只能支持requirements.txt的pip依赖文件，需要用uv生成项目依赖文件。
+```shell
+uv pip compile pyproject.toml --all-extras -o requirements.txt
+```
+
+**注：需要注释掉`pywin32==311`这一行。**'
+
+2. 基于魔搭创空间部署：
+
+将项目上传到魔搭创空间的Git代码仓库中，然后在`设置`里点击上线发布即可。
+
+3. Docker环境部署
+
+```shell
+docker build -t resonant-soul:v1.0 .
+docker run -p 7860:7860 --name resonant-soul resonant-soul:v1.0
+```
+
