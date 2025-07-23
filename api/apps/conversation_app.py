@@ -42,7 +42,7 @@ def process_user_input(current_user, user_input, history: list):
     """
 
     # 调用大模型进行对话
-    assistant_response, _ = role_play_session.astep(input_msg)
+    assistant_response, _ = role_play_session.step(input_msg)
     response_content = assistant_response.msg.content
 
     if "Solution:" in response_content:
