@@ -11,6 +11,7 @@ from datetime import datetime
 from api.db.db_models import User
 import hashlib
 
+
 class UserService:
     @staticmethod
     def get_by_username(username):
@@ -27,24 +28,27 @@ class UserService:
     @staticmethod
     def check_user_status(user):
         """检查用户状态"""
-        if user.status == "禁用":
-            return False, "账号已被禁用，请联系管理员"
-        return True, "正常"
+        message = "正常"
+        status_ok = True
+        if not user.status:
+            message = "账号已被禁用，请联系管理员"
+            status_ok = False
+        return status_ok, message
 
     @staticmethod
     def register(username, name_nick, password, is_admin=False):
         if UserService.get_by_username(username):
             return None
-        
+
         password_hash = hashlib.sha256(password.encode()).hexdigest()
         current_time = datetime.now()
-        
+
         user = User.create(
             username=username,
             password=password_hash,
             name_nick=name_nick,
             is_admin=is_admin,
-            status='正常',
+            status=True,
             created_at=current_time,
             updated_at=current_time
         )
@@ -63,7 +67,7 @@ class UserService:
         try:
             user = User.get_by_id(user_id)
             # 防止禁用管理员账号
-            if user.is_admin and status == "禁用":
+            if user.is_admin and not status:
                 return False
             user.status = status
             user.updated_at = datetime.now()

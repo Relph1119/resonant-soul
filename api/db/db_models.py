@@ -10,7 +10,7 @@
 from datetime import datetime
 
 from loguru import logger
-from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField
+from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField, SQL
 from peewee import Model
 from peewee import SqliteDatabase
 
@@ -30,7 +30,7 @@ class User(BaseModel):
     username = TextField(unique=True)  # 用户名，唯一
     name_nick = TextField()  # 昵称
     password = TextField()  # 密码
-    status = TextField(default='正常')  # 用户状态
+    status = BooleanField(default=True)  # 用户状态：True=启用，False=禁用
     is_admin = BooleanField(default=False)  # 是否是管理员
 
     class Meta:

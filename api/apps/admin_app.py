@@ -7,8 +7,10 @@
 @project: resonant-soul
 @desc:
 """
-from api.db.services.user_service import UserService
 from loguru import logger
+
+from api.db.services.user_service import UserService
+
 
 def get_all_users():
     """获取所有用户列表"""
@@ -16,11 +18,16 @@ def get_all_users():
         users = UserService.get_all_users()
         user_list = []
         for user in users:
+            if user.status:
+                status_msg = "正常"
+            else:
+                status_msg = "已禁用"
+
             user_dict = {
                 'id': user.id,
                 'username': user.username,
                 'name': user.name_nick,
-                'status': getattr(user, 'status', '正常'),  # 使用 getattr 防止属性不存在
+                'status': status_msg,
                 'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S') if user.created_at else ''
             }
             user_list.append(user_dict)

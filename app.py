@@ -10,12 +10,12 @@
 
 import gradio as gr
 
+from api.apps.admin_app import get_all_users, update_user_status, delete_user
 from api.apps.conversation_app import process_user_input
 from api.apps.emotion_app import get_all_emotion_records
 from api.apps.sas_app import process_sas_scores
 from api.apps.statistics_app import generate_stats_charts, get_stats_text
 from api.apps.user_app import user_login, user_register
-from api.apps.admin_app import get_all_users, update_user_status, delete_user
 from api.db.services.user_service import UserService
 
 # SAS焦虑自评量表题目
@@ -181,74 +181,80 @@ def create_gradio_interface():
             # 添加管理员标签页
             with gr.Tab("管理员功能", visible=False) as admin_tab:
                 gr.Markdown("## 用户管理")
-                
+
                 # 用户列表
                 users_table = gr.Dataframe(
-                    headers=["用户ID", "用户名", "昵称", "状态", "注册时间"],
+                    headers=["用户ID", "用户名", "昵称", "状态", "注册时间"],  # 新增操作列
                     label="用户列表",
                     interactive=False,
                     value=get_all_users()  # 直接在创建时加载数据
                 )
-                
+
                 with gr.Row():
                     refresh_users_btn = gr.Button("刷新用户列表", variant="primary")
-                    
+
                 with gr.Row():
                     with gr.Column(scale=1):
-                        selected_user_id = gr.Number(label="选择用户ID", precision=0)
+                        selected_user_id = gr.Number(label="选择用户ID", precision=0, minimum=1, value=2)
                     with gr.Column(scale=1):
-                        user_status = gr.Radio(
-                            choices=["正常", "禁用"], 
-                            label="用户状态",
-                            value="正常"
+                        # 将单选按钮改为操作选择下拉菜单
+                        user_actions = gr.Radio(
+                            choices=[
+                                ("🛑启用用户", "enable"),
+                                ("✅禁用用户", "disable"),
+                                ("❌删除用户", "delete")
+                            ],
+                            label="选择操作",
+                            type="value"
                         )
                     with gr.Column(scale=1):
-                        update_status_btn = gr.Button("更新状态", variant="secondary")
-                        delete_user_btn = gr.Button("删除用户", variant="stop")
-                
+                        execute_action_btn = gr.Button("执行操作", variant="secondary")
+
                 operation_status = gr.Textbox(label="操作结果", interactive=False)
-                
+
                 # 更新用户列表函数
                 def update_users_list():
                     users = get_all_users()
                     if users:
-                        return [[user['id'], user['username'], user['name'], 
-                                user['status'], user['created_at']] for user in users]
+                        return [[
+                            user['id'],
+                            user['username'],
+                            user['name'],
+                            user['status'],
+                            user['created_at'],
+                        ] for user in users]
                     return []
-                
-                # 更新用户状态函数
-                def update_status(user_id, status):
-                    if not user_id:
-                        return "请选择用户ID", None
-                    result = update_user_status(user_id, status)
-                    if result:
-                        return "状态更新成功", update_users_list()
-                    return "状态更新失败", None
-                
-                # 删除用户函数
-                def remove_user(user_id):
-                    if not user_id:
-                        return "请选择用户ID", None
-                    result = delete_user(user_id)
-                    if result:
-                        return "用户删除成功", update_users_list()
-                    return "用户删除失败", None
-                
+
                 # 绑定事件
                 refresh_users_btn.click(
                     update_users_list,
                     outputs=users_table
                 )
-                
-                update_status_btn.click(
-                    update_status,
-                    inputs=[selected_user_id, user_status],
-                    outputs=[operation_status, users_table]
-                )
-                
-                delete_user_btn.click(
-                    remove_user,
-                    inputs=[selected_user_id],
+
+                # 新增统一操作处理函数
+                def handle_user_action(user_id, action):
+                    if not user_id:
+                        return "请选择用户ID", None
+                    try:
+                        if action == "disable":
+                            result = update_user_status(user_id, False)
+                        elif action == "enable":
+                            result = update_user_status(user_id, True)
+                        elif action == "delete":
+                            result = delete_user(user_id)
+                        else:
+                            return "无效的操作类型", None
+
+                        if result:
+                            return f"操作成功：{action}", update_users_list()
+                        return "操作失败", None
+                    except Exception as e:
+                        return f"操作出错：{str(e)}", None
+
+                # 绑定新的事件
+                execute_action_btn.click(
+                    handle_user_action,
+                    inputs=[selected_user_id, user_actions],
                     outputs=[operation_status, users_table]
                 )
 
@@ -259,7 +265,7 @@ def create_gradio_interface():
                 return "用户名或密码错误", None
             if user_data.get("error"):
                 return user_data["error"], None
-            
+
             # 获取完整的用户信息
             user = UserService.get_by_username(username)
             return "登录成功", {
@@ -276,7 +282,7 @@ def create_gradio_interface():
         ).success(
             # 根据登录结果决定面板显示状态
             lambda status, user: (
-                gr.Column(visible=user is None), 
+                gr.Column(visible=user is None),
                 gr.Column(visible=user is not None),
                 gr.Tab(visible=user and user.get('is_admin', False))
             ),
@@ -285,7 +291,7 @@ def create_gradio_interface():
         ).success(
             # 更新用户显示
             fn=lambda user: gr.Markdown(
-                f"### 当前用户：{user['name']} {'(管理员)' if user.get('is_admin') else ''}" 
+                f"### 当前用户：{user['name']} {'(管理员)' if user.get('is_admin') else ''}"
                 if user else "### 当前用户：未登录"
             ),
             inputs=[current_user],
