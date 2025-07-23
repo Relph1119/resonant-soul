@@ -381,6 +381,11 @@ def create_gradio_interface():
             fn=lambda user: gr.Markdown(f"### 当前用户：{user['name']}" if user else "### 当前用户：未登录"),
             inputs=[current_user],
             outputs=current_user_display
+        ).success(
+            # 更新用户信息
+            fn=update_user_info,
+            inputs=current_user,
+            outputs=[user_info, nick_info, reg_date_info]
         )
 
         def update_relaxation_guide(choice):
