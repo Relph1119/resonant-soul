@@ -9,6 +9,7 @@
 """
 from datetime import datetime
 
+from loguru import logger
 from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField
 from peewee import Model
 from peewee import SqliteDatabase
@@ -18,6 +19,8 @@ db_proxy = Proxy()
 
 class BaseModel(Model):
     id = IntegerField(primary_key=True)
+    created_at = DateTimeField(default=datetime.now)  # 创建时间
+    updated_at = DateTimeField(default=datetime.now)  # 更新时间
 
     class Meta:
         database = db_proxy  # 延迟初始化
@@ -29,8 +32,6 @@ class User(BaseModel):
     password = TextField()  # 密码
     status = TextField(default='正常')  # 用户状态
     is_admin = BooleanField(default=False)  # 是否是管理员
-    created_at = DateTimeField(default=datetime.now)  # 创建时间
-    updated_at = DateTimeField(default=datetime.now)  # 更新时间
 
     class Meta:
         table_name = 'users'
@@ -39,7 +40,7 @@ class User(BaseModel):
 # 情绪记录模型
 class Emotion(BaseModel):
     timestamp = DateTimeField(default=datetime.now)
-    emotions = TextField()  # 存储JSON字符串
+    emotions = TextField()  # 存储List
     user_input = TextField()
     user_id = ForeignKeyField(User, backref='emotions')
 
@@ -72,12 +73,8 @@ class DBManager:
         # 自动创建表
         with self.db:
             self._create_tables()
-            print("数据库表创建成功")
+            logger.info("数据库表创建成功")
 
     def _create_tables(self):
         """创建数据库表"""
         self.db.create_tables(self.models, safe=True)
-
-
-# 创建数据库实例
-db_manager = DBManager()

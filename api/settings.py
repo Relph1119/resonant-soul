@@ -19,10 +19,11 @@ from api.utils.t_crypt import decrypt_api_key, generate_key
 EMOTION_RECORDS = []
 databaseConn = None
 CHAT_MDL = None
+ADMIN_USER = None
 
 
 def init_settings():
-    global EMOTION_RECORDS, databaseConn, CHAT_MDL
+    global EMOTION_RECORDS, databaseConn, CHAT_MDL, ADMIN_USER
     # 存储情绪记录和日记
     databaseConn = DBManager()
 
@@ -40,3 +41,4 @@ def init_settings():
         url=LLM['model_url'],
         api_key=api_key
     )
+    ADMIN_USER = get_base_config("admin")

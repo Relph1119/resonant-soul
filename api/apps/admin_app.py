@@ -8,7 +8,7 @@
 @desc:
 """
 from api.db.services.user_service import UserService
-
+from loguru import logger
 
 def get_all_users():
     """获取所有用户列表"""
@@ -26,7 +26,7 @@ def get_all_users():
             user_list.append(user_dict)
         return user_list
     except Exception as e:
-        print(f"获取用户列表失败: {str(e)}")
+        logger.error(f"获取用户列表失败: {str(e)}")
         return []
 
 
@@ -35,7 +35,7 @@ def update_user_status(user_id, status):
     try:
         return UserService.update_status(user_id, status)
     except Exception as e:
-        print(f"更新用户状态失败: {str(e)}")
+        logger.error(f"更新用户状态失败: {str(e)}")
         return False
 
 
@@ -44,7 +44,7 @@ def delete_user(user_id):
     try:
         return UserService.delete_user(user_id)
     except Exception as e:
-        print(f"删除用户失败: {str(e)}")
+        logger.error(f"删除用户失败: {str(e)}")
         return False
 
 
@@ -56,9 +56,5 @@ def create_admin_user(username, name_nick, password):
             return True, "管理员账号创建成功"
         return False, "创建失败：用户名已存在"
     except Exception as e:
-        print(f"创建管理员账号失败: {str(e)}")
+        logger.error(f"创建管理员账号失败: {str(e)}")
         return False, f"创建失败: {str(e)}"
-
-
-# 初始化管理员账号
-create_admin_user("admin", "系统管理员", "admin123")
