@@ -45,6 +45,7 @@ def process_user_input(current_user, user_input, history: list):
     assistant_response, _ = role_play_session.step(input_msg)
     response_content = assistant_response.msg.content
 
+    # 数据后处理
     if "Solution:" in response_content:
         response_content = response_content.split("Solution:")[1]
         response_content = response_content.split("Next request.")[0].strip()

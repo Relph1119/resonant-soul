@@ -41,9 +41,11 @@ class UserService:
         if UserService.get_by_username(username):
             return None
 
+        # 密码哈希处理
         password_hash = hashlib.sha256(password.encode()).hexdigest()
         current_time = datetime.now()
 
+        # 保存用户数据
         user = User.create(
             username=username,
             password=password_hash,

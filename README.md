@@ -101,3 +101,18 @@ docker build -t resonant-soul:v1.0 .
 docker run -p 7860:7860 --name resonant-soul resonant-soul:v1.0
 ```
 
+## 致谢
+
+**核心贡献者**
+- [胡锐锋-项目负责人](https://github.com/Relph1119) （Datawhale成员-系统架构设计师）
+- [陈思州-项目负责人](https://github.com/jjyaoao) （Datawhale成员）
+
+**其他**
+1. 特别感谢 [@Sm1les](https://github.com/Sm1les)、[@LSGOMYP](https://github.com/LSGOMYP) 对本项目的帮助与支持；
+
+## 关注我们
+
+<div align=center>
+<p>扫描下方二维码关注公众号：Datawhale</p>
+<img src="https://raw.githubusercontent.com/datawhalechina/pumpkin-book/master/res/qrcode.jpeg" width = "180" height = "180">
+</div>

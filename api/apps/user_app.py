@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-@author: HuRuiFeng
+@author: Datawhale
 @file: user_app.py
 @time: 2025/7/22 17:12
 @project: resonant-soul
@@ -11,6 +11,7 @@ from api.db.services.user_service import UserService
 
 
 def user_register(username, name_nick, password):
+    """用户注册"""
     try:
         user = UserService.register(username, name_nick, password)
         if user:
@@ -27,6 +28,7 @@ def user_register(username, name_nick, password):
 
 
 def user_login(username, password):
+    """用户登录"""
     user = UserService.get_by_username(username)
     if not user:
         return {"error": "用户不存在"}
@@ -48,6 +50,7 @@ def user_login(username, password):
 
 
 def get_user_info_by_username(username):
+    """根据用户名获取用户信息"""
     user = UserService.get_by_username(username)
     if user:
         return {
@@ -60,6 +63,7 @@ def get_user_info_by_username(username):
 
 
 def get_user_info_by_id(user_id):
+    """根据用户ID获取用户信息"""
     user = UserService.get_by_id(user_id)
     if user:
         return {
@@ -73,4 +77,5 @@ def get_user_info_by_id(user_id):
 
 
 def update_password(user_id,new_pwd):
+    """更新用户密码"""
     return UserService.update_password(user_id, new_pwd)

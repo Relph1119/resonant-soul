@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
-@author: HuRuiFeng
+@author: Datawhale
 @file: init_data.py
 @time: 2025/7/23 9:52
 @project: resonant-soul
