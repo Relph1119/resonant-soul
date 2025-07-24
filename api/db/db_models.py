@@ -10,9 +10,8 @@
 from datetime import datetime
 
 from loguru import logger
-from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField, SQL
+from peewee import DateTimeField, TextField, IntegerField, Proxy, ForeignKeyField, BooleanField
 from peewee import Model
-from peewee import SqliteDatabase
 
 db_proxy = Proxy()
 
@@ -64,6 +63,7 @@ class Assessment(BaseModel):
 
 class DBManager:
     def __init__(self, db_path='mindmate.db'):
+        from peewee import SqliteDatabase
         # 初始化数据库连接
         self.db = SqliteDatabase(db_path)
         db_proxy.initialize(self.db)
