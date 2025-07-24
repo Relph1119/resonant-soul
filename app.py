@@ -95,11 +95,11 @@ def create_gradio_interface():
                 gr.Markdown("## 焦虑自评量表(SAS)")
                 gr.Markdown("""
                 ### 评分说明：
-                1 = 很少或没有
-                2 = 有时
-                3 = 经常
-                4 = 总是如此
-    
+                1 = 很少或没有</br>
+                2 = 有时</br>
+                3 = 经常</br>
+                4 = 总是如此</br>
+                </br>
                 请根据最近一周的感受进行评分。
                 """)
 
@@ -117,10 +117,14 @@ def create_gradio_interface():
                             )
                         )
                     sas_submit = gr.Button("提交评估", variant="primary")
-                    sas_result = gr.Textbox(label="评估结果", interactive=False)
+                    sas_result = gr.Markdown(label="评估结果")
+
+                    def process_sas_scores_wapper(current_user, *sas_scores):
+                        user_id = current_user['id']
+                        return process_sas_scores(user_id, *sas_scores)
 
                     sas_submit.click(
-                        process_sas_scores,
+                        process_sas_scores_wapper,
                         inputs=[current_user, *sas_scores],
                         outputs=sas_result
                     )

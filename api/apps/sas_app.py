@@ -35,22 +35,24 @@ def process_sas_scores(user_id, *scores):
     total_score = calculate_sas_score(scores)
     result = get_sas_result(total_score)
 
-    # 保存评估结果到数据库
-    AssessmentService.save_assessment(user_id, list(scores), total_score, result)
+    if user_id is not None:
+        # 保存评估结果到数据库
+        AssessmentService.save_assessment(user_id, list(scores), total_score, result)
 
-    detailed_result = f"""
-评估完成！
-
-您的SAS标准分为: {total_score}
-
-评估结果: {result}
-
-参考说明：
-- 50分以下：焦虑水平在正常范围内
-- 50-59分：轻度焦虑
-- 60-69分：中度焦虑
-- 70分以上：重度焦虑
-
-注意：本测评仅供参考，如有需要请咨询专业心理医生。
-    """
-    return detailed_result
+        detailed_result = f"""
+    评估完成！</br>
+    
+    您的SAS标准分为: {total_score}</br>
+    
+    评估结果: {result}</br>
+    
+    参考说明：</br>
+    - 50分以下：焦虑水平在正常范围内</br>
+    - 50-59分：轻度焦虑</br>
+    - 60-69分：中度焦虑</br>
+    - 70分以上：重度焦虑</br>
+    </br>
+    注意：本测评仅供参考，如有需要请咨询专业心理医生。
+        """
+        return detailed_result
+    return None
