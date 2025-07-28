@@ -46,10 +46,10 @@ ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
 ENV PYTHONPATH=/resonant-soul/
 
-COPY web web
 COPY api api
 COPY conf conf
 COPY pyproject.toml uv.lock ./
+COPY app.py ./
 
 COPY docker/entrypoint.sh ./
 RUN chmod +x ./entrypoint*.sh

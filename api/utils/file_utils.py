@@ -34,7 +34,7 @@ def load_yaml_conf(conf_path):
     if not os.path.isabs(conf_path):
         conf_path = os.path.join(get_project_base_directory(), conf_path)
     try:
-        with open(conf_path) as f:
+        with open(conf_path, encoding='utf-8') as f:
             yaml = YAML(typ="safe", pure=True)
             return yaml.load(f)
     except Exception as e:

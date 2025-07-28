@@ -10,11 +10,12 @@
 
 import gradio as gr
 
+from api.apps.admin_app import get_all_users, update_user_status, delete_user
 from api.apps.conversation_app import process_user_input
 from api.apps.emotion_app import get_all_emotion_records
 from api.apps.sas_app import process_sas_scores
 from api.apps.statistics_app import generate_stats_charts, get_stats_text
-from api.apps.user_app import user_login, user_register
+from api.apps.user_app import user_login, user_register, get_user_info_by_username, update_password, get_user_info_by_id
 
 # SAS焦虑自评量表题目
 sas_questions = [
@@ -55,7 +56,7 @@ is_logged_in = False
 
 def create_gradio_interface():
     with gr.Blocks(title="心灵伙伴 - AI心理健康助手", theme=gr.themes.Soft()) as _interface:
-        current_user = gr.State({"id": None, "name": None})
+        current_user = gr.State({"id": None, "name": None, "is_admin": False})
 
         # 用户认证面板
         with gr.Column(visible=True) as auth_panel:
@@ -65,7 +66,7 @@ def create_gradio_interface():
                     login_username = gr.Textbox(label="用户名")
                     login_password = gr.Textbox(label="密码", type="password")
                     login_btn = gr.Button("登录")
-                    login_status = gr.Textbox(interactive=False)
+                    login_status = gr.Textbox(label="登录状态", interactive=False)
 
                 with gr.Tab("注册", id="register"):
                     register_username = gr.Textbox(label="用户名")
@@ -84,8 +85,9 @@ def create_gradio_interface():
                     with gr.Column(scale=3):
                         chatbot = gr.Chatbot(height=400, type='messages')
                         input_text = gr.Textbox(label="在这里输入您想说的话...",
-                                                placeholder="请告诉我您的想法或感受...")
-                        submit = gr.Button("发送")
+                                                placeholder="请告诉我您的想法或感受...",
+                                                submit_btn=True,
+                                                stop_btn=True)
                     with gr.Column(scale=1):
                         emotion_chart = gr.Plot(label="Emotion Trend")
 
@@ -93,11 +95,11 @@ def create_gradio_interface():
                 gr.Markdown("## 焦虑自评量表(SAS)")
                 gr.Markdown("""
                 ### 评分说明：
-                1 = 很少或没有
-                2 = 有时
-                3 = 经常
-                4 = 总是如此
-
+                1 = 很少或没有</br>
+                2 = 有时</br>
+                3 = 经常</br>
+                4 = 总是如此</br>
+                </br>
                 请根据最近一周的感受进行评分。
                 """)
 
@@ -115,10 +117,14 @@ def create_gradio_interface():
                             )
                         )
                     sas_submit = gr.Button("提交评估", variant="primary")
-                    sas_result = gr.Textbox(label="评估结果", interactive=False)
+                    sas_result = gr.Markdown(label="评估结果")
+
+                    def process_sas_scores_wapper(current_user, *sas_scores):
+                        user_id = current_user['id']
+                        return process_sas_scores(user_id, *sas_scores)
 
                     sas_submit.click(
-                        process_sas_scores,
+                        process_sas_scores_wapper,
                         inputs=[current_user, *sas_scores],
                         outputs=sas_result
                     )
@@ -176,30 +182,187 @@ def create_gradio_interface():
                 stats_plot.value = generate_stats_charts(user_id)
                 stats_text.value = get_stats_text(user_id)
 
+            with gr.Tab("用户信息"):
+                gr.Markdown("## 个人信息管理")
+
+                # 用户信息展示
+                with gr.Column():
+                    user_info = gr.Textbox(label="用户名", interactive=False)
+                    nick_info = gr.Textbox(label="用户昵称", interactive=False)
+                    reg_date_info = gr.Textbox(label="注册时间", interactive=False)
+
+                # 密码修改模块
+                with gr.Column():
+                    with gr.Row():
+                        new_password = gr.Textbox(label="新密码", type="password")
+                        confirm_password = gr.Textbox(label="确认新密码", type="password")
+                    update_pwd_btn = gr.Button("修改密码", variant="primary")
+                    pwd_status = gr.Textbox(label="操作结果", interactive=False)
+
+                # 信息更新函数
+                def update_user_info(current_user):
+                    if current_user is not None:
+                        user = get_user_info_by_id(current_user['id'])
+                        if user:
+                            return [
+                                user['username'],
+                                user['name'],
+                                user['created_at']
+                            ]
+                    return ["", "", ""]
+
+                # 密码修改处理
+                def change_password(current_user, new_pwd, confirm_pwd):
+                    if new_pwd != confirm_pwd:
+                        return "新密码与确认密码不一致"
+                    if len(new_pwd) < 8:
+                        return "密码长度至少8位"
+
+                    try:
+                        update_password(current_user['id'], new_pwd)
+                        return "密码修改成功"
+                    except Exception as e:
+                        return f"密码修改失败：{str(e)}"
+
+                # 绑定事件
+                update_pwd_btn.click(
+                    change_password,
+                    inputs=[current_user, new_password, confirm_password],
+                    outputs=pwd_status
+                )
+
+            # 添加管理员标签页
+            with gr.Tab("管理员功能", visible=False) as admin_tab:
+                gr.Markdown("## 用户管理")
+
+                # 用户列表
+                users_table = gr.Dataframe(
+                    headers=["用户ID", "用户名", "昵称", "状态", "注册时间"],  # 新增操作列
+                    label="用户列表",
+                    interactive=False,
+                    value=get_all_users()  # 直接在创建时加载数据
+                )
+
+                with gr.Row():
+                    refresh_users_btn = gr.Button("刷新用户列表", variant="primary")
+
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        selected_user_id = gr.Number(label="选择用户ID", precision=0, minimum=1, value=2)
+                    with gr.Column(scale=1):
+                        # 将单选按钮改为操作选择下拉菜单
+                        user_actions = gr.Radio(
+                            choices=[
+                                ("🛑启用用户", "enable"),
+                                ("✅禁用用户", "disable"),
+                                ("❌删除用户", "delete")
+                            ],
+                            label="选择操作",
+                            type="value"
+                        )
+                    with gr.Column(scale=1):
+                        execute_action_btn = gr.Button("执行操作", variant="secondary")
+
+                operation_status = gr.Textbox(label="操作结果", interactive=False)
+
+                # 更新用户列表函数
+                def update_users_list():
+                    users = get_all_users()
+                    if users:
+                        return [[
+                            user['id'],
+                            user['username'],
+                            user['name'],
+                            user['status'],
+                            user['created_at'],
+                        ] for user in users]
+                    return []
+
+                # 绑定事件
+                refresh_users_btn.click(
+                    update_users_list,
+                    outputs=users_table
+                )
+
+                # 新增统一操作处理函数
+                def handle_user_action(user_id, action):
+                    if not user_id:
+                        return "请选择用户ID", None
+                    try:
+                        if action == "disable":
+                            result = update_user_status(user_id, False)
+                        elif action == "enable":
+                            result = update_user_status(user_id, True)
+                        elif action == "delete":
+                            result = delete_user(user_id)
+                        else:
+                            return "无效的操作类型", None
+
+                        if result:
+                            return f"操作成功：{action}", update_users_list()
+                        return "操作失败", None
+                    except Exception as e:
+                        return f"操作出错：{str(e)}", None
+
+                # 绑定新的事件
+                execute_action_btn.click(
+                    handle_user_action,
+                    inputs=[selected_user_id, user_actions],
+                    outputs=[operation_status, users_table]
+                )
+
         # 事件处理
         def login(username, password):
             user_data = user_login(username, password)
             if not user_data:
                 return "用户名或密码错误", None
-            if user_data.get("error") == "用户不存在":
-                return "用户不存在，请先注册", None
-            return "登录成功", user_data
+            if user_data.get("error"):
+                return user_data["error"], None
 
-        login_btn.click(
+            # 获取完整的用户信息
+            user = get_user_info_by_username(username)
+            return "登录成功", user
+
+        login_event = lambda method: method(
             login,
             inputs=[login_username, login_password],
             outputs=[login_status, current_user]
         ).success(
             # 根据登录结果决定面板显示状态
-            lambda status, user: (gr.Column(visible=user is None), gr.Column(visible=user is not None)),
+            lambda status, user: (
+                gr.Column(visible=user is None),
+                gr.Column(visible=user is not None),
+                gr.Tab(visible=user and user.get('is_admin', False))
+            ),
             inputs=[login_status, current_user],
-            outputs=[auth_panel, main_panel]
+            outputs=[auth_panel, main_panel, admin_tab]
         ).success(
-            # 更新用户显示时添加空值检查
-            fn=lambda user: gr.Markdown(f"### 当前用户：{user['name']}" if user else "### 当前用户：未登录"),
+            # 更新用户显示
+            fn=lambda user: gr.Markdown(
+                f"### 当前用户：{user['name']} {'(管理员)' if user.get('is_admin') else ''}"
+                if user else "### 当前用户：未登录"
+            ),
             inputs=[current_user],
             outputs=current_user_display
+        ).success(
+            # 更新用户信息
+            fn=update_user_info,
+            inputs=current_user,
+            outputs=[user_info, nick_info, reg_date_info]
+        ).success(
+            fn=update_diary,
+            inputs=current_user,
+            outputs=diary_list
+        ).success(
+            # 如果是管理员，刷新用户列表
+            fn=lambda user: update_users_list() if user and user.get('is_admin') else None,
+            inputs=[current_user],
+            outputs=users_table
         )
+
+        # 应用统一处理到两个登录入口
+        login_event(login_btn.click)
+        login_event(login_password.submit)
 
         # 注册功能事件绑定
         def register(username, name_nick, password):
@@ -222,6 +385,11 @@ def create_gradio_interface():
             fn=lambda user: gr.Markdown(f"### 当前用户：{user['name']}" if user else "### 当前用户：未登录"),
             inputs=[current_user],
             outputs=current_user_display
+        ).success(
+            # 更新用户信息
+            fn=update_user_info,
+            inputs=current_user,
+            outputs=[user_info, nick_info, reg_date_info]
         )
 
         def update_relaxation_guide(choice):
@@ -236,7 +404,7 @@ def create_gradio_interface():
         def set_welcome_message():
             return [{"role": "assistant", "content": welcome_message}]
 
-        submit.click(
+        input_text.submit(
             fn=process_user_input,
             inputs=[current_user, input_text, chatbot],
             outputs=[chatbot, emotion_chart],
@@ -258,6 +426,5 @@ def create_gradio_interface():
     return _interface
 
 
-if __name__ == "__main__":
-    interface = create_gradio_interface()
-    interface.launch(server_port=5760, server_name='0.0.0.0')
+interface = create_gradio_interface()
+interface.launch()

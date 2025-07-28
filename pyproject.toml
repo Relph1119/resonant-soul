@@ -8,6 +8,7 @@ dependencies = [
     "camel-ai[al1]==0.2.72",
     "cryptography>=45.0.5",
     "gradio>=5.38.0",
+    "loguru>=0.7.3",
     "matplotlib>=3.10.3",
     "peewee>=3.18.2",
     "pip>=25.1.1",

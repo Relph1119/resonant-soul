@@ -41,12 +41,15 @@ def process_user_input(current_user, user_input, history: list):
     Input: {user_input}
     """
 
-    # 调用打模型进行对话
+    # 调用大模型进行对话
     assistant_response, _ = role_play_session.step(input_msg)
     response_content = assistant_response.msg.content
 
+    # 数据后处理
     if "Solution:" in response_content:
-        response_content = response_content.split("Solution:")[1].split("Next request.")[0].strip()
+        response_content = response_content.split("Solution:")[1]
+        response_content = response_content.split("Next request.")[0].strip()
+        response_content = response_content.split("next request.")[0].strip()
 
     third_person_phrases = [
         "作为心理咨询师，",
