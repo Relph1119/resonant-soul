@@ -1,29 +1,10 @@
----
-# 详细文档见https://modelscope.cn/docs/%E5%88%9B%E7%A9%BA%E9%97%B4%E5%8D%A1%E7%89%87
-domain: #领域：cv/nlp/audio/multi-modal/AutoML
-# - cv
-tags: #自定义标签
--
-datasets: #关联数据集
-  evaluation:
-  #- iic/ICDAR13_HCTR_Dataset
-  test:
-  #- iic/MTWI
-  train:
-  #- iic/SIBR
-models: #关联模型
-#- iic/ofa_ocr-recognition_general_base_zh
-
-## 启动文件(若SDK为Gradio/Streamlit，默认为app.py, 若为Static HTML, 默认为index.html)
-# deployspec:
-#   entry_file: app.py
-license: Apache License 2.0
----
 # ResonantSoul 
 
 心灵伴侣-您的AI心理健康助手，这是一个基于Gradio和Camel-AI框架构建的心理健康智能体系统，主要面向大学生群体，提供心理咨询和支持服务。系统的核心是基于Camel-AI的多智能体对话框架，通过角色扮演实现专业的心理咨询功能。
 
-功能列表：
+![项目需求](./resources/project-requirements.png)
+
+**功能列表：**
 1. 用户管理：用户登录、用户注册、用户信息管理
 2. 对话管理：对话生成、对话历史记录、对话内容存储
 3. 情绪系统：情绪识别分析、情绪记录管理、情绪趋势统计
@@ -32,11 +13,13 @@ license: Apache License 2.0
 6. 统计分析：情绪分布统计、评估结果统计、对话活跃度分析
 7. 日记系统：情绪日记记录、日记历史管理、日记内容统计
 
-## 项目地址 
+## 魔搭演示环境地址
 
-```bash
- git clone https://www.modelscope.cn/studios/Datawhale/resonant-soul.git
-```
+https://modelscope.cn/studios/Datawhale/resonant-soul/summary
+
+![登录注册](./resources/login-register.png)
+
+![对话系统](./resources/dialogue-system.png)
 
 ## 环境安装
 
